@@ -8,6 +8,20 @@ import StatusBadge from '@/components/StatusBadge'
 import { Search, Download, Trash2, ChevronDown, ChevronRight } from 'lucide-react'
 import { ExecutionLog, Task } from '@/types'
 
+function formatDuration(ms: number | null): string {
+  if (ms == null) return '-'
+  if (ms < 1000) return `${ms}ms`
+  const totalSec = Math.floor(ms / 1000)
+  const hours = Math.floor(totalSec / 3600)
+  const minutes = Math.floor((totalSec % 3600) / 60)
+  const seconds = totalSec % 60
+  const millis = ms % 1000
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`
+  if (minutes > 0) return `${minutes}m ${seconds}s`
+  if (seconds >= 10) return `${seconds}s`
+  return `${seconds}.${Math.floor(millis / 100)}s`
+}
+
 export default function Logs() {
   const [logs, setLogs] = useState<ExecutionLog[]>([])
   const [tasks, setTasks] = useState<Task[]>([])
@@ -121,7 +135,7 @@ export default function Logs() {
                       <span className="text-sm font-medium">{log.task_name || `Task #${log.task_id}`}</span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      {log.duration_ms != null && <span>{log.duration_ms}ms</span>}
+                      {log.duration_ms != null && <span>{formatDuration(log.duration_ms)}</span>}
                       {log.exit_code != null && <span>Exit: {log.exit_code}</span>}
                       {log.http_status && <span>HTTP {log.http_status}</span>}
                       {log.retry_attempt > 0 && <Badge variant="outline" className="text-xs">Retry #{log.retry_attempt}</Badge>}
@@ -140,7 +154,7 @@ export default function Logs() {
                       <div className="grid grid-cols-4 gap-2 pt-2 font-sans text-muted-foreground">
                         <div>Start: {new Date(log.start_time).toLocaleString()}</div>
                         {log.end_time && <div>End: {new Date(log.end_time).toLocaleString()}</div>}
-                        <div>Duration: {log.duration_ms}ms</div>
+                        <div>Duration: {formatDuration(log.duration_ms)}</div>
                         <div>Attempt: {log.retry_attempt}</div>
                       </div>
                       {log.stdout && (
