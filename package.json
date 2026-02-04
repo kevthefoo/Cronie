@@ -1,0 +1,41 @@
+{
+  "name": "cronie",
+  "version": "1.0.0",
+  "description": "Custom Task Scheduler",
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && tsc -p tsconfig.electron.json",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && tsc -p tsconfig.electron.json && electron .\"",
+    "electron:build": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "electron-store": "^8.2.0",
+    "node-cron": "^3.0.3",
+    "sql.js": "^1.11.0"
+  },
+  "devDependencies": {
+    "@types/node-cron": "^3.0.11",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "lucide-react": "^0.460.0",
+    "postcss": "^8.4.49",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.14.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^3.4.16",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  }
+}
