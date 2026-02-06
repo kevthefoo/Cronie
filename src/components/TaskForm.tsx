@@ -22,7 +22,8 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
   const [tags, setTags] = useState(task?.tags || '')
   const [retryCount, setRetryCount] = useState(task?.retry_count || 0)
   const [retryDelay, setRetryDelay] = useState(task?.retry_delay_ms || 1000)
-  const [timeout, setTimeout_] = useState(task?.timeout_ms || 30000)
+  // Store timeout in minutes for UI, convert to/from ms when loading/saving
+  const [timeoutMinutes, setTimeoutMinutes] = useState(task?.timeout_ms ? task.timeout_ms / 60000 : 1)
 
   // Shell config
   const [command, setCommand] = useState(config.command || '')
@@ -60,7 +61,7 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
       name, description, cron_expression: cronExpression,
       task_type: taskType as any,
       config: JSON.stringify(configObj),
-      tags, retry_count: retryCount, retry_delay_ms: retryDelay, timeout_ms: timeout,
+      tags, retry_count: retryCount, retry_delay_ms: retryDelay, timeout_ms: timeoutMinutes * 60000,
     })
   }
 
@@ -155,8 +156,8 @@ export default function TaskForm({ task, onSave, onCancel }: TaskFormProps) {
           <Input type="number" min={0} value={retryCount} onChange={e => setRetryCount(Number(e.target.value))} />
         </div>
         <div className="space-y-1">
-          <label className="text-sm font-medium">Timeout (ms)</label>
-          <Input type="number" min={1000} value={timeout} onChange={e => setTimeout_(Number(e.target.value))} />
+          <label className="text-sm font-medium">Timeout (min)</label>
+          <Input type="number" min={0.1} step={0.1} value={timeoutMinutes} onChange={e => setTimeoutMinutes(Number(e.target.value))} />
         </div>
       </div>
 

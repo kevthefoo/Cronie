@@ -67,7 +67,7 @@ export default function TaskDetail({ taskId, onBack }: TaskDetailProps) {
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="flex items-center gap-1">{task.task_type === 'shell' ? <Terminal className="w-3 h-3" /> : <Globe className="w-3 h-3" />}{task.task_type}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Schedule</span><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{task.cron_expression}</code></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Timeout</span><span>{task.timeout_ms}ms</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Timeout</span><span>{(task.timeout_ms / 60000).toFixed(1)} min</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Retries</span><span>{task.retry_count}</span></div>
             {task.task_type === 'shell' && config.command && (
               <div className="mt-2 p-2 bg-muted rounded font-mono text-xs whitespace-pre-wrap">{config.command}</div>
