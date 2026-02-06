@@ -6,7 +6,7 @@ export default function TitleBar() {
   return (
     <div className="h-10 bg-background border-b flex items-center justify-between px-4 select-none" style={{ WebkitAppRegion: 'drag' } as any}>
       <div className="flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-primary" />
+        <img src="/assets/Icon.png" alt="Cronie" className="w-4 h-4" />
         <span className="text-sm font-semibold text-foreground">Cronie</span>
       </div>
       {isElectron && (

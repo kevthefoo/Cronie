@@ -13,71 +13,14 @@ export function getMainWindow(): BrowserWindow | null {
 
 const isDev = !app.isPackaged;
 
-function createAppIcon(size: number): Electron.NativeImage {
-  const buf = Buffer.alloc(size * size * 4, 0);
-
-  const cx = size / 2;
-  const cy = size / 2;
-  const r = size / 2 - 2;
-
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const dx = x - cx;
-      const dy = y - cy;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const i = (y * size + x) * 4;
-
-      if (dist <= r) {
-        // Purple circle background (#7C3AED)
-        buf[i] = 124;     // R
-        buf[i + 1] = 58;  // G
-        buf[i + 2] = 237; // B
-        buf[i + 3] = 255; // A
-
-        // Anti-alias edge
-        if (dist > r - 1.5) {
-          buf[i + 3] = Math.round(255 * (r - dist) / 1.5);
-        }
-      }
-
-      // Clock hands (white)
-      // Hour hand: pointing up-right (~2 o'clock)
-      const hourLen = r * 0.5;
-      const hourAngle = -Math.PI / 6; // 1 o'clock
-      const hourEndX = cx + Math.sin(hourAngle) * hourLen;
-      const hourEndY = cy - Math.cos(hourAngle) * hourLen;
-      if (dist <= r - 2 && distToSegment(x, y, cx, cy, hourEndX, hourEndY) < 1.8) {
-        buf[i] = 255; buf[i + 1] = 255; buf[i + 2] = 255; buf[i + 3] = 255;
-      }
-
-      // Minute hand: pointing right (~15 min)
-      const minLen = r * 0.7;
-      const minAngle = Math.PI / 2; // 3 o'clock
-      const minEndX = cx + Math.sin(minAngle) * minLen;
-      const minEndY = cy - Math.cos(minAngle) * minLen;
-      if (dist <= r - 2 && distToSegment(x, y, cx, cy, minEndX, minEndY) < 1.2) {
-        buf[i] = 255; buf[i + 1] = 255; buf[i + 2] = 255; buf[i + 3] = 255;
-      }
-
-      // Center dot
-      if (dist < 2) {
-        buf[i] = 255; buf[i + 1] = 255; buf[i + 2] = 255; buf[i + 3] = 255;
-      }
-    }
+function getIconPath(): string {
+  if (isDev) {
+    return path.join(app.getAppPath(), 'assets', 'Icon.png');
   }
-
-  return nativeImage.createFromBuffer(buf, { width: size, height: size });
+  return path.join(process.resourcesPath, 'assets', 'Icon.png');
 }
 
-function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const lenSq = dx * dx + dy * dy;
-  let t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
-  const projX = x1 + t * dx;
-  const projY = y1 + t * dy;
-  return Math.sqrt((px - projX) ** 2 + (py - projY) ** 2);
-}
+const appIcon = nativeImage.createFromPath(getIconPath());
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -86,7 +29,7 @@ function createWindow() {
     minWidth: 900,
     minHeight: 600,
     title: 'Cronie',
-    icon: createAppIcon(256),
+    icon: appIcon,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -116,8 +59,8 @@ function createWindow() {
 }
 
 function createTray() {
-  const icon = createAppIcon(16);
-  tray = new Tray(icon);
+  const trayIcon = appIcon.resize({ width: 16, height: 16 });
+  tray = new Tray(trayIcon);
   tray.setToolTip('Cronie - Task Scheduler');
 
   updateTrayMenu();
