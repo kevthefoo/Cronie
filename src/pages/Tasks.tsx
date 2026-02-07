@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { Plus, Play, Trash2, Eye, Terminal, Globe, Puzzle, CheckCircle2, X, Pencil } from 'lucide-react'
+import { Select } from '@/components/ui/select'
+import { Plus, Play, Trash2, Eye, Terminal, Globe, Puzzle, CheckCircle2, X, Pencil, ArrowUpDown } from 'lucide-react'
 
 function GripDots({ className }: { className?: string }) {
   return (
@@ -28,6 +29,27 @@ import { CSS } from '@dnd-kit/utilities'
 
 const typeIcons = { shell: Terminal, http: Globe, plugin: Puzzle }
 
+type SortMode = 'manual' | 'earliest' | 'latest'
+
+// Parse cron expression to get minutes since midnight (for sorting)
+// Returns null if the time is not specific (e.g., wildcards)
+function parseCronTime(cronExpression: string): number | null {
+  const parts = cronExpression.trim().split(/\s+/)
+  if (parts.length < 2) return null
+
+  const [minute, hour] = parts
+
+  // Check if both minute and hour are specific numbers
+  const minuteNum = parseInt(minute, 10)
+  const hourNum = parseInt(hour, 10)
+
+  if (isNaN(minuteNum) || isNaN(hourNum)) return null
+  if (minute.includes('*') || minute.includes('/') || minute.includes(',') || minute.includes('-')) return null
+  if (hour.includes('*') || hour.includes('/') || hour.includes(',') || hour.includes('-')) return null
+
+  return hourNum * 60 + minuteNum
+}
+
 interface SortableTaskCardProps {
   task: Task
   running: Set<number>
@@ -36,10 +58,11 @@ interface SortableTaskCardProps {
   onViewTask: (id: number) => void
   onEdit: (task: Task) => void
   onDelete: (task: Task) => void
+  isDragDisabled?: boolean
 }
 
-function SortableTaskCard({ task, running, onToggle, onRunNow, onViewTask, onEdit, onDelete }: SortableTaskCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
+function SortableTaskCard({ task, running, onToggle, onRunNow, onViewTask, onEdit, onDelete, isDragDisabled }: SortableTaskCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id, disabled: isDragDisabled })
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -53,7 +76,12 @@ function SortableTaskCard({ task, running, onToggle, onRunNow, onViewTask, onEdi
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
-            <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-1 text-muted-foreground hover:text-foreground">
+            <button
+              {...attributes}
+              {...listeners}
+              className={`p-1 -ml-1 ${isDragDisabled ? 'cursor-not-allowed opacity-30' : 'cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground'}`}
+              title={isDragDisabled ? 'Switch to Manual Order to drag' : 'Drag to reorder'}
+            >
               <GripDots className="w-4 h-4" />
             </button>
             <div className="p-2 rounded-md bg-primary/10">
@@ -104,6 +132,7 @@ export default function Tasks({ onViewTask }: TasksProps) {
   const [running, setRunning] = useState<Set<number>>(new Set())
   const [toast, setToast] = useState<{ message: string; visible: boolean; isError: boolean }>({ message: '', visible: false, isError: false })
   const [deleteConfirm, setDeleteConfirm] = useState<Task | null>(null)
+  const [sortMode, setSortMode] = useState<SortMode>('manual')
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -174,6 +203,26 @@ export default function Tasks({ onViewTask }: TasksProps) {
     }
   }
 
+  // Get sorted tasks based on sort mode
+  function getSortedTasks(): Task[] {
+    if (sortMode === 'manual') return tasks
+
+    return [...tasks].sort((a, b) => {
+      const timeA = parseCronTime(a.cron_expression)
+      const timeB = parseCronTime(b.cron_expression)
+
+      // Tasks without specific times go to the end
+      if (timeA === null && timeB === null) return 0
+      if (timeA === null) return 1
+      if (timeB === null) return -1
+
+      return sortMode === 'earliest' ? timeA - timeB : timeB - timeA
+    })
+  }
+
+  const sortedTasks = getSortedTasks()
+  const isDragDisabled = sortMode !== 'manual'
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -181,9 +230,23 @@ export default function Tasks({ onViewTask }: TasksProps) {
           <h1 className="text-2xl font-bold text-white">Tasks</h1>
           <p className="text-muted-foreground text-sm">{tasks.length} scheduled tasks</p>
         </div>
-        <Button onClick={() => { setEditingTask(null); setShowForm(true) }}>
-          <Plus className="w-4 h-4 mr-2" /> New Task
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+            <Select
+              value={sortMode}
+              onChange={e => setSortMode(e.target.value as SortMode)}
+              className="w-44"
+            >
+              <option value="manual">Manual Order</option>
+              <option value="earliest">Earliest First</option>
+              <option value="latest">Latest First</option>
+            </Select>
+          </div>
+          <Button onClick={() => { setEditingTask(null); setShowForm(true) }}>
+            <Plus className="w-4 h-4 mr-2" /> New Task
+          </Button>
+        </div>
       </div>
 
       {/* Task form modal */}
@@ -203,9 +266,9 @@ export default function Tasks({ onViewTask }: TasksProps) {
       )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={sortedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
-            {tasks.map(task => (
+            {sortedTasks.map(task => (
               <SortableTaskCard
                 key={task.id}
                 task={task}
@@ -215,6 +278,7 @@ export default function Tasks({ onViewTask }: TasksProps) {
                 onViewTask={onViewTask}
                 onEdit={(t) => { setEditingTask(t); setShowForm(true) }}
                 onDelete={handleDelete}
+                isDragDisabled={isDragDisabled}
               />
             ))}
             {tasks.length === 0 && !showForm && (

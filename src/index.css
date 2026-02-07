@@ -73,3 +73,14 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground) / 0.5);
 }
+
+/* Native select dropdown styling for dark mode */
+.dark select,
+.dark select option {
+  background-color: hsl(240 6% 12%);
+  color: white;
+}
+
+select option {
+  padding: 8px;
+}
