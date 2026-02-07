@@ -49,7 +49,7 @@ export default function TaskDetail({ taskId, onBack }: TaskDetailProps) {
         </Button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">{task.name}</h1>
+            <h1 className="text-2xl font-bold text-white">{task.name}</h1>
             <Badge variant={task.enabled ? 'success' : 'secondary'}>
               {task.enabled ? 'Enabled' : 'Disabled'}
             </Badge>

@@ -37,7 +37,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-muted-foreground text-sm">Overview of your scheduled tasks</p>
       </div>
 

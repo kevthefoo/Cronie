@@ -24,7 +24,7 @@ export function registerIpcHandlers() {
   });
 
   // Tasks CRUD
-  ipcMain.handle('tasks:list', () => queryAll('SELECT * FROM tasks ORDER BY created_at DESC'));
+  ipcMain.handle('tasks:list', () => queryAll('SELECT * FROM tasks ORDER BY sort_order ASC, created_at DESC'));
 
   ipcMain.handle('tasks:get', (_e, id: number) => queryOne('SELECT * FROM tasks WHERE id = ?', [id]));
 
@@ -73,6 +73,14 @@ export function registerIpcHandlers() {
     const task = queryOne('SELECT * FROM tasks WHERE id = ?', [id]) as Task | undefined;
     if (!task) return { error: 'Task not found' };
     return executeTask(task);
+  });
+
+  ipcMain.handle('tasks:reorder', (_e, taskIds: number[]) => {
+    taskIds.forEach((id, index) => {
+      runSql('UPDATE tasks SET sort_order = ? WHERE id = ?', [index, id]);
+    });
+    saveDb();
+    return { success: true };
   });
 
   // Logs

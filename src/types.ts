@@ -10,6 +10,7 @@ export interface Task {
   retry_count: number;
   retry_delay_ms: number;
   timeout_ms: number;
+  sort_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +70,7 @@ declare global {
       deleteTask: (id: number) => Promise<{ success: boolean }>;
       toggleTask: (id: number) => Promise<Task>;
       runTaskNow: (id: number) => Promise<any>;
+      reorderTasks: (taskIds: number[]) => Promise<{ success: boolean }>;
       getLogs: (filters?: any) => Promise<ExecutionLog[]>;
       getLogCount: () => Promise<{ count: number }>;
       getStats: () => Promise<Stats>;

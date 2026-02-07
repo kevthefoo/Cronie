@@ -14,6 +14,7 @@ const api = {
   deleteTask: (id: number) => ipcRenderer.invoke('tasks:delete', id),
   toggleTask: (id: number) => ipcRenderer.invoke('tasks:toggle', id),
   runTaskNow: (id: number) => ipcRenderer.invoke('tasks:run-now', id),
+  reorderTasks: (taskIds: number[]) => ipcRenderer.invoke('tasks:reorder', taskIds),
 
   // Logs
   getLogs: (filters?: any) => ipcRenderer.invoke('logs:list', filters),

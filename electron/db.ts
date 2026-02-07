@@ -79,6 +79,13 @@ function migrate(db: Database) {
   db.run(`CREATE INDEX IF NOT EXISTS idx_logs_task_id ON execution_logs(task_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_logs_status ON execution_logs(status)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_logs_start_time ON execution_logs(start_time)`);
+
+  // Add sort_order column if it doesn't exist
+  try {
+    db.run(`ALTER TABLE tasks ADD COLUMN sort_order INTEGER DEFAULT 0`);
+  } catch (e) {
+    // Column already exists
+  }
 }
 
 export function closeDb() {
